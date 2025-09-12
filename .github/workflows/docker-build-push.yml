@@ -1,0 +1,47 @@
+name: Build and Push Docker Image to GHCR
+
+on:
+  push:
+    branches: [ "main" ]  # Trigger on pushes to main branch
+  # Optional: Also trigger on releases
+  # release:
+  #   types: [published]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest  # Use Ubuntu runner (includes Docker)
+    permissions:
+      contents: read  # Needed to read the repo
+      packages: write  # Needed to push to GHCR
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4  # Checks out your code
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}  # Your GitHub username
+          password: ${{ secrets.GITHUB_TOKEN }}  # Built-in token for auth
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/${{ github.repository }}  # e.g., ghcr.io/owrensgate/user-registration-backend
+          tags: |
+            type=ref,event=branch  # Tag with branch name (e.g., main)
+            type=sha  # Tag with commit SHA (e.g., abc123)
+            type=raw,value=latest,enable={{is_default_branch}}  # Tag 'latest' only on main
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .  # Build context: root directory (where Dockerfile is)
+          push: true  # Push to registry after build
+          tags: ${{ steps.meta.outputs.tags }}  # Use tags from metadata step
+          labels: ${{ steps.meta.outputs.labels }}  # Optional: Add labels for better metadata
+          # Optional: Cache for faster builds (add if builds are slow)
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
