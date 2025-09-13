@@ -1,7 +1,6 @@
-package com.example.userregistration.repository;
+package com.example.users.repository;
 
-import com.example.userregistration.model.User;
+import com.example.users.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserRepository extends JpaRepository<User, Long> {
-}
+public interface UserRepository extends JpaRepository<User, Long> {}
