@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: yourdockerusername/backend:latest
+          image: ebijon/backend:latest
           ports:
             - containerPort: 8080
 ---
