@@ -1,12 +1,46 @@
-version: '3'
+version: '3.8'
 services:
   backend:
-    image: user-registration-backend
+    image: ghcr.io/owrensgate/user-registration-backend:latest  # Or build locally: build: ./user-registration-backend
     ports:
       - "8080:8080"
+    environment:
+      - DB_USERNAME=root
+      - DB_PASSWORD=secret
+      - SPRING_PROFILES_ACTIVE=prod  # Optional: Activate prod profile
+    depends_on:
+      - mysql
+    networks:
+      - app-network
+
+  mysql:
+    image: mysql:8.0  # Latest stable MySQL
+    container_name: user-registration-mysql
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=verysecret  # Root password
+      - MYSQL_DATABASE=userdb  # Auto-create DB
+      - MYSQL_USER=root  # Or create a dedicated user
+      - MYSQL_PASSWORD=secret
+    ports:
+      - "3306:3306"  # Expose for local access (optional)
+    volumes:
+      - mysql-data:/var/lib/mysql  # Persist data
+    networks:
+      - app-network
+
+  # Optional: Add frontend
   frontend:
-    image: user-registration-frontend
+    image: ghcr.io/owrensgate/user-registration-frontend:latest  # Or build: ./user-registration-frontend
     ports:
       - "3000:80"
     depends_on:
       - backend
+    networks:
+      - app-network
+
+volumes:
+  mysql-data:  # Named volume for persistence
+
+networks:
+  app-network:  # Internal network for communication
